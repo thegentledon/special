@@ -1,23 +1,325 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Quiz</title>
-    <link rel="stylesheet" href="style.css">
 </head>
+<style>
+    body {
+        font-family: 'Georgia', serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background-color: #ffe6e9;
+        /* Soft pink background */
+    }
+
+    .quiz-container {
+        width: 90%;
+        max-width: 600px;
+        padding: 20px;
+        margin: 10px;
+        background-color: #fff0f5;
+        /* Light pink for a romantic vibe */
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(255, 20, 147, 0.3);
+        /* Romantic pink shadow */
+        border: 2px solid #ffb6c1;
+        /* Soft pink border */
+    }
+
+    h1 {
+        text-align: center;
+        font-size: 2em;
+        color: #ff69b4;
+        /* Deep pink */
+        margin-bottom: 10px;
+    }
+
+    .question {
+        margin: 20px 0;
+        font-size: 1.2em;
+        color: #d1477a;
+        /* Soft romantic red */
+        text-align: center;
+    }
+
+    .options {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .option {
+        width: 45%;
+        max-width: 200px;
+        cursor: pointer;
+        position: relative;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .option:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(255, 105, 180, 0.2);
+        /* Subtle hover effect */
+    }
+
+    .option img {
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+        border: 3px solid transparent;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .correct img {
+        border-color: #32cd32;
+        /* Light green border for correct answers */
+    }
+
+    .incorrect img {
+        border-color: #d1477a;
+        /* Romantic red for incorrect answers */
+    }
+
+    .feedback {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        font-size: 24px;
+        display: none;
+    }
+
+    .correct .feedback.correct-feedback,
+    .incorrect .feedback.incorrect-feedback {
+        display: inline;
+    }
+
+    #next-button {
+        display: block;
+        margin: 20px auto;
+        padding: 12px 24px;
+        font-size: 16px;
+        cursor: pointer;
+        border: none;
+        background-color: #ff69b4;
+        color: white;
+        border-radius: 25px;
+        transition: background-color 0.3s, transform 0.3s;
+        box-shadow: 0 4px 12px rgba(255, 105, 180, 0.3);
+    }
+
+    #next-button:hover {
+        background-color: #ff1493;
+        /* Deeper pink on hover */
+        transform: scale(1.05);
+    }
+
+    #next-button:disabled {
+        background-color: #f8c5d4;
+        /* Light pink when disabled */
+        cursor: not-allowed;
+    }
+
+    /* End screen styles */
+    .end-screen {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: black;
+        /* Bright pink end screen */
+        color: white;
+        text-align: center;
+    }
+
+    .emoji {
+        font-size: 5em;
+        color: #ffffff;
+    }
+
+    .end-text {
+        font-size: 2.5em;
+        color: #ffffff;
+        margin-top: 10px;
+        font-style: italic;
+    }
+
+    /* Responsive styles */
+    @media (max-width: 600px) {
+        .quiz-container {
+            width: 100%;
+            padding: 15px;
+        }
+
+        h1 {
+            font-size: 1.8em;
+        }
+
+        .option {
+            width: 90%;
+        }
+
+        #next-button {
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+    }
+
+    @media (max-width: 400px) {
+        h1 {
+            font-size: 1.5em;
+        }
+
+        .option {
+            width: 90%;
+        }
+
+        #next-button {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+    }
+</style>
+
 <body>
     <div class="quiz-container">
         <h1>Try to answer it correctly</h1>
-        
+
         <div id="quiz">
             <!-- Single question will be displayed here dynamically -->
         </div>
-        
+
         <button id="next-button" onclick="nextQuestion()" disabled>Next</button>
         <div class="results" id="results"></div>
     </div>
 
     <script src="script.js"></script>
 </body>
+<script>
+    // Questions Array
+    const questions = [
+        {
+            question: "Where is tree",
+            options: [
+                { image: "tree.jpg", isCorrect: true },
+                { image: "notree.jpeg", isCorrect: false }
+            ]
+        },
+        {
+            question: "Where is sugar?",
+            options: [
+                { image: "nosughar.jpeg", isCorrect: false },
+                { image: "sugar.jpg", isCorrect: true }
+            ]
+        },
+        {
+            question: "Where is honey?",
+            options: [
+                { image: "honey.jpg", isCorrect: true },
+                { image: "nohoney.jpeg", isCorrect: false }
+            ]
+        },
+        {
+            question: "Which is the moon?",
+            options: [
+                { image: "moon.jpeg", isCorrect: false },
+                { image: "nomoon.jpg", isCorrect: false }
+            ]
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    const quizContainer = document.getElementById("quiz");
+    const nextButton = document.getElementById("next-button");
+
+    // Function to render the current question
+    function renderQuestion() {
+        // Clear previous content
+        quizContainer.innerHTML = '';
+        nextButton.disabled = true;
+
+        const questionData = questions[currentQuestionIndex];
+        const questionElem = document.createElement("div");
+        questionElem.classList.add("question");
+
+        const questionText = document.createElement("h3");
+        questionText.textContent = questionData.question;
+
+        const optionsContainer = document.createElement("div");
+        optionsContainer.classList.add("options");
+
+        questionData.options.forEach((option, optionIndex) => {
+            const optionElem = document.createElement("div");
+            optionElem.classList.add("option");
+
+            const optionImage = document.createElement("img");
+            optionImage.src = option.image;
+            optionImage.alt = `Option ${optionIndex + 1}`;
+
+            const feedback = document.createElement("span");
+            feedback.classList.add("feedback");
+            feedback.classList.add(option.isCorrect ? "correct-feedback" : "incorrect-feedback");
+            feedback.textContent = option.isCorrect ? "✔️" : "❌";
+
+            optionElem.appendChild(optionImage);
+            optionElem.appendChild(feedback);
+
+            optionElem.addEventListener("click", () => selectOption(optionElem, option.isCorrect));
+            optionsContainer.appendChild(optionElem);
+        });
+
+        questionElem.appendChild(questionText);
+        questionElem.appendChild(optionsContainer);
+        quizContainer.appendChild(questionElem);
+    }
+
+    // Function to handle option selection
+    function selectOption(optionElem, isCorrect) {
+        const options = quizContainer.querySelectorAll(".option");
+
+        options.forEach((option) => {
+            option.classList.remove("correct", "incorrect");
+        });
+
+        optionElem.classList.add(isCorrect ? "correct" : "incorrect");
+        nextButton.disabled = false; // Enable "Next" button after selection
+    }
+
+    // Function to go to the next question
+    function nextQuestion() {
+        currentQuestionIndex++;
+
+        if (currentQuestionIndex < questions.length) {
+            renderQuestion();
+        } else {
+            showResults();
+        }
+    }
+
+    // Function to display results at the end
+    function showResults() {
+        // Clear the quiz container
+        quizContainer.innerHTML = `
+        <div class="end-screen">
+            <span class="emoji">👉</span>
+            <p class="end-text">You</p>
+        </div>
+    `;
+        // Hide the "Next" button
+        nextButton.style.display = "none";
+    }
+
+
+    // Initialize the quiz
+    renderQuestion();
+
+</script>
+
 </html>
